@@ -1,2 +1,2 @@
-# ip-law-ru-dataset
+# law-ru-dataset
 instruction tuning dataset based on russian law corpus
