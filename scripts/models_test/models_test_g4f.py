@@ -36,11 +36,13 @@ def generate_responses_with_g4f(data, output_json_path):
         "detailed_times": []
     }
 
+    # Ensure the output file exists and is properly encoded
     if not os.path.exists(output_json_path):
-        with open(output_json_path, "w") as f:
-            json.dump([], f)
+        with open(output_json_path, "w", encoding="utf-8") as f:
+            json.dump([], f, ensure_ascii=False)
 
-    with open(output_json_path, "r") as f:
+    # Load existing results
+    with open(output_json_path, "r", encoding="utf-8") as f:
         try:
             existing_results = json.load(f)
         except json.JSONDecodeError:
@@ -78,6 +80,11 @@ def generate_responses_with_g4f(data, output_json_path):
             # Extract the generated text
             answer = response.choices[0].message.content.strip()
 
+            # Handle malformed server responses
+            if isinstance(answer, dict):
+                logging.warning(f"Malformed response for ID {question_id}: {answer}")
+                answer = "Malformed response received from the server."
+
             # Check if the model repeats the question
             if answer == question.strip():
                 logging.warning(f"Model repeated the question for ID {question_id}. Generating fallback response.")
@@ -98,7 +105,7 @@ def generate_responses_with_g4f(data, output_json_path):
             results.append(result)
 
             existing_results.append(result)
-            with open(output_json_path, "w") as f:
+            with open(output_json_path, "w", encoding="utf-8") as f:
                 json.dump(existing_results, f, indent=4, ensure_ascii=False)
 
             logging.info(f"Processed question ID: {question_id} in {generation_time:.2f} seconds")
@@ -117,7 +124,7 @@ def generate_responses_with_g4f(data, output_json_path):
     )
 
     stats_output_path = output_json_path.replace(".json", "_stats.json")
-    with open(stats_output_path, "w") as f:
+    with open(stats_output_path, "w", encoding="utf-8") as f:
         json.dump(stats, f, indent=4, ensure_ascii=False)
 
     logging.info(f"Total time for all generations: {stats['total_time_seconds']:.2f} seconds")
